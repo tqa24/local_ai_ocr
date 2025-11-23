@@ -1,9 +1,9 @@
 # src/gui.py
 import time
 import os
-from PySide6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, 
-                               QPushButton, QTextEdit, QListWidget, QFileDialog, 
-                               QLabel, QProgressBar, QSplitter, QComboBox, 
+from PySide6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
+                               QPushButton, QTextEdit, QListWidget, QFileDialog,
+                               QLabel, QProgressBar, QSplitter, QComboBox,
                                QMessageBox, QGroupBox, QDialog, QDialogButtonBox, QFormLayout, QSpinBox)
 from PySide6.QtCore import Qt, Slot, QUrl
 from PySide6.QtGui import QTextCursor, QDesktopServices, QIcon
@@ -12,6 +12,7 @@ import constants
 import file_handler
 import lang_handler
 from worker import OCRWorker
+from model_handler import ModelHandler
 
 class PageRangeDialog(QDialog):
     def __init__(self, filename, total_pages, translations, parent=None):
@@ -58,66 +59,50 @@ class PageRangeDialog(QDialog):
         return self.spin_start.value(), self.spin_end.value()
 
 class OCRWindow(QMainWindow):
-    def __init__(self, ollama_client):
+    def __init__(self):
         super().__init__()
-        self.client = ollama_client
-        
         self.setWindowTitle("Local AI OCR")
         self.resize(1067, 600) # Six-seven... Six-seven... Six-seven...
+
+        root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        # Define model path to avoid duplication
+        self.model_path = os.path.join(root_dir, "models", "DeepSeek-OCR")
 
         # Set Window Icon (Specific to this window instance)
         icon_path = os.path.join(os.path.dirname(__file__), "icon.png")
         if os.path.exists(icon_path):
             self.setWindowIcon(QIcon(icon_path))
-        
+
         self.current_lang = lang_handler.get_default_language()
         self.t = constants.TRANSLATIONS[self.current_lang]
-        
+
         self.image_queue = [] 
         self.worker = None
         self.batch_start_time = 0.0
 
         self.init_ui()
-        
-        # Fetch and populate models
-        models = self.fetch_models()
-        if models:
-            self.combo_model.addItems(models)
-            # Try to set default if available
-            default_model = "deepseek-ocr:3b-q4_K_M"
-            index = self.combo_model.findText(default_model)
-            if index >= 0:
-                self.combo_model.setCurrentIndex(index)
-        else:
-            QMessageBox.critical(self, "Error", "No models found!\nPlease ensure that Ollama is running.")
-            self.combo_model.addItem("deepseek-ocr:3b-q4_K_M")
-
         self.apply_language() 
+
+        # Check if model files exist
+        self.check_model_presence()
 
     def init_ui(self):
         main_widget = QWidget()
         self.setCentralWidget(main_widget)
         main_layout = QVBoxLayout(main_widget)
-        
+
         # Top Bar
         top_bar = QHBoxLayout()
-        
+
         self.btn_about = QPushButton()
         self.btn_about.clicked.connect(self.show_about)
         top_bar.addWidget(self.btn_about)
-        
-        # Model Selector
-        top_bar.addSpacing(20)
-        top_bar.addWidget(QLabel("Model:"))
-        self.combo_model = QComboBox()
-        self.combo_model.setMinimumWidth(200)
-        self.combo_model.currentTextChanged.connect(self.update_model_info_button)
-        top_bar.addWidget(self.combo_model)
-        
-        self.btn_model_info = QPushButton()
-        self.btn_model_info.clicked.connect(self.show_model_info)
-        top_bar.addWidget(self.btn_model_info)
-        
+
+        # Unload Button
+        self.btn_unload = QPushButton()
+        self.btn_unload.clicked.connect(self.unload_model)
+        top_bar.addWidget(self.btn_unload)
+
         top_bar.addStretch()
         
         top_bar.addWidget(QLabel("Language / Ngôn ngữ:"))
@@ -140,11 +125,11 @@ class OCRWindow(QMainWindow):
         self.btn_add_img = QPushButton()
         self.btn_add_pdf = QPushButton()
         self.btn_clear = QPushButton()
-        
+
         self.btn_add_img.clicked.connect(self.add_images)
         self.btn_add_pdf.clicked.connect(self.add_pdf)
         self.btn_clear.clicked.connect(self.clear_queue)
-        
+
         btn_layout.addWidget(self.btn_add_img)
         btn_layout.addWidget(self.btn_add_pdf)
         btn_layout.addWidget(self.btn_clear)
@@ -162,7 +147,7 @@ class OCRWindow(QMainWindow):
         self.lbl_prompt = QLabel()
         self.combo_prompts = QComboBox()
         self.combo_prompts.currentIndexChanged.connect(self.on_prompt_change)
-        
+
         p_layout.addWidget(self.lbl_prompt)
         p_layout.addWidget(self.combo_prompts)
         self.group_settings.setLayout(p_layout)
@@ -170,22 +155,22 @@ class OCRWindow(QMainWindow):
 
         # Run/Stop
         run_layout = QHBoxLayout()
-        
+
         self.btn_run = QPushButton()
         self.btn_run.setFixedHeight(40)
-        self.btn_run.setObjectName("btnRun") # <--- Set Object Name for QSS
+        self.btn_run.setObjectName("btnRun")
         self.btn_run.clicked.connect(self.start_processing)
-        
+
         self.btn_stop = QPushButton()
         self.btn_stop.setFixedHeight(40)
-        self.btn_stop.setObjectName("btnStop") # <--- Set Object Name for QSS
+        self.btn_stop.setObjectName("btnStop")
         self.btn_stop.clicked.connect(self.stop_processing)
         self.btn_stop.setEnabled(False) 
-        
+
         run_layout.addWidget(self.btn_run)
         run_layout.addWidget(self.btn_stop)
         left_layout.addLayout(run_layout)
-        
+
         self.progress_bar = QProgressBar()
         left_layout.addWidget(self.progress_bar)
         splitter.addWidget(left_panel)
@@ -199,10 +184,10 @@ class OCRWindow(QMainWindow):
         self.btn_copy = QPushButton()
         self.btn_copy.clicked.connect(self.text_output.selectAll)
         self.btn_copy.clicked.connect(self.text_output.copy)
-        
+
         r_layout.addWidget(self.lbl_output)
         r_layout.addWidget(self.text_output)
-        
+
         self.lbl_proofread = QLabel()
         self.lbl_proofread.setObjectName("lblProofread")
         self.lbl_proofread.setAlignment(Qt.AlignCenter)
@@ -212,30 +197,6 @@ class OCRWindow(QMainWindow):
         splitter.addWidget(right_panel)
         splitter.setSizes([267, 800])
 
-    def fetch_models(self):
-        try:
-            response = self.client.list()
-            # Handle if response is a dict or object
-            if hasattr(response, 'models'):
-                models = response.models
-            else:
-                models = response.get('models', [])
-            
-            names = []
-            for m in models:
-                # m might be a dict or object
-                if hasattr(m, 'model'):
-                    names.append(m.model)
-                elif isinstance(m, dict) and 'name' in m: 
-                    names.append(m['name'])
-                elif isinstance(m, dict) and 'model' in m:
-                    names.append(m['model'])
-            
-            return sorted(names)
-        except Exception as e:
-            print(f"Error fetching models: {e}")
-            return []
-
     def change_language(self, lang_name):
         self.current_lang = lang_name
         self.t = constants.TRANSLATIONS[lang_name]
@@ -243,7 +204,7 @@ class OCRWindow(QMainWindow):
 
     def apply_language(self):
         self.btn_about.setText(self.t["btn_about"])
-        
+        self.btn_unload.setText(self.t["btn_unload"])
         self.btn_add_img.setText(self.t["btn_add_img"])
         self.btn_add_pdf.setText(self.t["btn_add_pdf"])
         self.btn_clear.setText(self.t["btn_clear"])
@@ -255,15 +216,15 @@ class OCRWindow(QMainWindow):
         self.lbl_proofread.setText(self.t["lbl_proofread"])
 
         self.btn_copy.setText(self.t["btn_copy"])
-        
+
         current_id = self.combo_prompts.currentData()
         self.combo_prompts.blockSignals(True) 
         self.combo_prompts.clear()
-        
+
         prompt_labels = self.t["prompt_labels"]
         for pid, label in prompt_labels.items():
             self.combo_prompts.addItem(label, pid)
-        
+
         if current_id:
             index = self.combo_prompts.findData(current_id)
             if index >= 0:
@@ -272,10 +233,21 @@ class OCRWindow(QMainWindow):
             index = self.combo_prompts.findData("p_ocr")
             if index >= 0:
                 self.combo_prompts.setCurrentIndex(index)
-        
-        self.update_model_info_button()
         self.combo_prompts.blockSignals(False)
         self.update_status()
+
+    def check_model_presence(self):
+        model_weights = os.path.join(self.model_path, "model-00001-of-00005.safetensors")
+
+        # We check for the model weights itself
+        if not os.path.exists(model_weights):
+            QMessageBox.critical(
+                self,
+                self.t["msg_model_missing_title"],
+                self.t["msg_model_missing_text"]
+            )
+            # Disable the Run button so that the user don't try to crash the program
+            self.btn_run.setEnabled(False)
 
     def show_about(self):
         # Resolve absolute path for the HTML img tag
@@ -286,14 +258,18 @@ class OCRWindow(QMainWindow):
         msg.setWindowTitle(self.t["about_title"])
         msg.setText(self.t["about_text"].format(icon_url, constants.APP_VERSION, constants.APP_AUTHOR))
         btn_gh = msg.addButton(self.t["btn_about_github"], QMessageBox.ActionRole)
-        btn_ok = msg.addButton(QMessageBox.Ok)
+        msg.addButton(QMessageBox.Ok)
         msg.exec()
-        
+
         if msg.clickedButton() == btn_gh:
             QDesktopServices.openUrl(QUrl(constants.PROJECT_URL))
 
+    def unload_model(self):
+        ModelHandler.get_instance().unload_model()
+        self.safe_append(f"\n>>> {self.t['msg_model_unloaded']} <<<\n")
+
     def on_prompt_change(self):
-        # Warning the user if they pick Markdown mode
+        # Warning the user if they pick Document to Markdown mode
         pid = self.combo_prompts.currentData()
         if pid == "p_markdown":
             QMessageBox.warning(self, "Warning", self.t["msg_markdown_warn"])
@@ -350,25 +326,26 @@ class OCRWindow(QMainWindow):
 
     def start_processing(self):
         if not self.image_queue: return
-        
+
         # Disclaimer about infinite loop 
         QMessageBox.information(self, "Disclaimer", self.t["msg_loop_disclaimer"])
-        
+
         pid = self.combo_prompts.currentData() 
-        prompt_template = constants.PROMPTS[pid] 
-        
-        # Get selected model
-        model_name = self.combo_model.currentText()
+        prompt_template = constants.PROMPTS[pid]
 
         # Prepare UI for processing
         self.set_processing_state(True)
         self.text_output.clear()
+        
+        # Notify user about load time
+        self.safe_append(f">>> {self.t['msg_loading_model']} <<<\n")
+        
         self.progress_bar.setMaximum(len(self.image_queue))
         self.progress_bar.setValue(0)
         self.batch_start_time = time.time()
 
         # Start the worker thread
-        self.worker = OCRWorker(self.client, self.image_queue, prompt_template, model_name)
+        self.worker = OCRWorker(self.image_queue, prompt_template, self.model_path)
         self.worker.stream_chunk.connect(self.safe_append)
         self.worker.image_started.connect(self.safe_append)
         self.worker.error_occurred.connect(lambda e: self.safe_append(f"\nERROR: {e}"))
@@ -390,7 +367,10 @@ class OCRWindow(QMainWindow):
         self.btn_add_pdf.setEnabled(inputs_enabled)
         self.btn_clear.setEnabled(inputs_enabled)
         self.combo_lang.setEnabled(inputs_enabled)
-        self.combo_model.setEnabled(inputs_enabled)
+        self.combo_prompts.setEnabled(inputs_enabled)
+        # We can allow unloading even during processing if we want to force kill,
+        # but it is safer to disable that capability.
+        self.btn_unload.setEnabled(inputs_enabled)
 
     @Slot(float)
     def on_image_finished(self, duration):
@@ -403,32 +383,8 @@ class OCRWindow(QMainWindow):
     def on_finished(self):
         self.set_processing_state(False)
         self.update_status() 
-        
+
         if self.progress_bar.value() == self.progress_bar.maximum():
             total_duration = time.time() - self.batch_start_time
             total_str = self.t["msg_total"].format(total_duration)
             QMessageBox.information(self, "Done", f"{self.t['msg_done']}\n{total_str}")
-
-    def update_model_info_button(self, text=None):
-        model = self.combo_model.currentText()
-        if model == "deepseek-ocr:3b-q4_K_M":
-            self.btn_model_info.setText(self.t["btn_model_fast"])
-            self.btn_model_info.setProperty("model_type", "fast")
-            self.btn_model_info.style().unpolish(self.btn_model_info)
-            self.btn_model_info.style().polish(self.btn_model_info)
-            self.btn_model_info.show()
-        elif model == "deepseek-ocr:3b":
-            self.btn_model_info.setText(self.t["btn_model_slow"])
-            self.btn_model_info.setProperty("model_type", "slow")
-            self.btn_model_info.style().unpolish(self.btn_model_info)
-            self.btn_model_info.style().polish(self.btn_model_info)
-            self.btn_model_info.show()
-        else:
-            self.btn_model_info.hide()
-
-    def show_model_info(self):
-        model = self.combo_model.currentText()
-        if model == "deepseek-ocr:3b-q4_K_M":
-            QMessageBox.warning(self, "Model Info", self.t["msg_model_fast_info"])
-        elif model == "deepseek-ocr:3b":
-            QMessageBox.information(self, "Model Info", self.t["msg_model_slow_info"])

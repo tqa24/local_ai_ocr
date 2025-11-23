@@ -1,3 +1,4 @@
+# src/file_handler.py
 import os
 import io
 import fitz  # PyMuPDF

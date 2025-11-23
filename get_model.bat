@@ -4,7 +4,8 @@ setlocal
 set "SCRIPTROOT=%~dp0"
 set "PYTHON_BIN=%SCRIPTROOT%python\python.exe"
 
-echo Starting Local AI OCR...
-"%PYTHON_BIN%" "%SCRIPTROOT%src\main.py"
+echo Downloading DeepSeek-OCR (BF16)...
+"%PYTHON_BIN%" "%SCRIPTROOT%get_model.py"
+pause
 
 endlocal

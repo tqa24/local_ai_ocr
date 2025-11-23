@@ -1,15 +1,13 @@
 # src/constants.py
-OLLAMA_HOST_DEFAULT = "http://127.0.0.1:11435"
 
-# Used by stream_ocr_response()
+# Used by model_handler.py
 PROMPTS = {
     "p_ocr":      "OCR this image.",
     "p_free":     "Free OCR.",
     "p_markdown": "<|grounding|>Convert the document to markdown.",
 }
 
-# Used by show_about() in gui.py
-APP_VERSION = "v1.0"
+APP_VERSION = "v2.0"
 APP_AUTHOR = "Nguyễn Phước Thịnh"
 PROJECT_URL = "https://github.com/th1nhhdk/local_ai_ocr" 
 
@@ -18,7 +16,7 @@ TRANSLATIONS = {
         "btn_add_img": "Add Images",
         "btn_add_pdf": "Add PDF",
         "btn_clear": "Clear Queue",
-        "btn_stop":  "STOP",
+        "btn_stop": "STOP",
         "lbl_queue": "Processing Queue:",
         "group_settings": "Settings",
         "lbl_prompt": "Select Mode:",
@@ -29,11 +27,14 @@ TRANSLATIONS = {
         "msg_error": "Error",
         "status_ready": "Start Processing ({})",
         "status_stopped": "Stopped by user.",
-        
+
         "msg_elapsed": "Done in: {:.2f}s",
-        "msg_total":   "Total Time: {:.2f}s",
-        "msg_markdown_warn": "<b>Warning:</b> This mode many generate a lot of HTML tags depending on the document (Tip: Use other AI to clean the output).",
-        "msg_loop_disclaimer": "<b>Disclaimer:</b> Due to technical limitations, the OCR AI <b>might get stuck</b> in an infinite loop. If that happens please press <b>STOP</b>.",
+        "msg_total": "Total Time: {:.2f}s",
+        "msg_markdown_warn": (
+            "<b>Warning:</b> This mode may generate a lot of HTML tags depending on the provided document.<br>"
+            "(Tip: Use other AI to clean the output)."
+        ),
+        "msg_loop_disclaimer": "<b>Disclaimer:</b> Due to DeepSeek-OCR limitations, the OCR AI <b>might get stuck</b> in an infinite loop. If that happens please press <b>STOP</b>.",
 
         "dlg_page_range_title": "Select Page Range",
         "dlg_page_range_msg": (
@@ -64,19 +65,19 @@ TRANSLATIONS = {
         },
         "lbl_proofread": "Please proofread the output, especially when there are important information.",
 
-        "btn_model_fast": "Fast but more inaccurate",
-        "btn_model_slow": "Slow but more accurate",
-        "msg_model_fast_info": (
-            "<b>Disclaimer:</b> This Model (q4_K_M) is faster but less accurate.<br>"
-            "This Model <b>tends to get stuck</b> in a infinite loop. Please use the <b>Slow Model</b> if possible."
+        "msg_model_missing_title": "AI Model Missing",
+        "msg_model_missing_text": (
+            "Cannot find DeepSeek-OCR model files.<br>"
+            "Please run 'get_model.bat' to download the necessary files."
         ),
-        "msg_model_slow_info": (
-            "<b>Info:</b> This Model is slower but offers higher accuracy.<br>"
-            "However, this Model <b>might get stuck</b> in a infinite loop because of technical limitations."
-        ),
+
+        "msg_loading_model": "Loading AI Model into memory...",
+        
+        "btn_unload": "Unload AI Model",
+        "msg_model_unloaded": "AI Model unloaded from memory.",
     },
     "Tiếng Việt": {
-        "btn_add_img": "Thêm Ảnh",
+        "btn_add_img": "Thêm ảnh",
         "btn_add_pdf": "Thêm PDF",
         "btn_clear": "Xóa sạch Hàng chờ",
         "btn_stop":  "DỪNG LẠI",
@@ -93,7 +94,10 @@ TRANSLATIONS = {
         
         "msg_elapsed": "Hoàn thành trong: {:.2f}s",
         "msg_total":   "Tổng thời gian: {:.2f}s",
-        "msg_markdown_warn": "<b>Cảnh báo:</b> Chế độ này có thể tạo ra rất nhiều tag HTML tùy vào tài liệu (Mẹo: Hãy sử dụng AI khác để dọn dẹp kết quả).",
+        "msg_markdown_warn": (
+            "<b>Cảnh báo:</b> Chế độ này có thể tạo ra rất nhiều tag HTML tùy vào tài liệu được cho.<br>"
+            "(Mẹo: Hãy sử dụng AI khác để dọn dẹp kết quả)."
+        ),
         "msg_loop_disclaimer": "<b>Lưu ý:</b> Vì giới hạn kỹ thuật, AI OCR <b>có thể bị kẹt</b> trong vòng lặp vô hạn. Nếu chuyện đó xảy ra, hãy nhấn <b>DỪNG LẠI</b>.",
 
         "dlg_page_range_title": "Chọn Phạm vi Trang",
@@ -125,15 +129,15 @@ TRANSLATIONS = {
         },
         "lbl_proofread": "Vui lòng kiểm tra lại kết quả, đặc biệt khi có thông tin quan trọng.",
 
-        "btn_model_fast": "Nhanh nhưng kém chính xác",
-        "btn_model_slow": "Chậm mà chính xác hơn",
-        "msg_model_fast_info": (
-            "<b>Lưu ý:</b> Model này (q4_K_M) nhanh hơn độ chính xác thấp hơn.<br>"
-            "Model này <b>dễ bị kẹt</b> trong vòng lặp vô hạn. Hãy dùng <b>Model Chậm</b> nếu có thể."
+        "msg_model_missing_title": "Thiếu Model AI",
+        "msg_model_missing_text": (
+            "Không thể tìm thấy tệp tin của DeepSeek-OCR.<br>"
+            "Vui lòng chạy 'get_model.bat' để tải những tệp tin cần thiết."
         ),
-        "msg_model_slow_info": (
-            "<b>Thông tin:</b> Model này chậm nhưng cung cấp độ chính xác cao hơn.<br>"
-            "Dù thế, Model này vẫn <b>có thể bị kẹt</b> trong vòng lặp vô hạn do giới hạn kỹ thuật."
-        ),
+
+        "msg_loading_model": "Đang tải Model AI vào bộ nhớ...",
+        
+        "btn_unload": "Unload Model AI",
+        "msg_model_unloaded": "Đã giải phóng Model AI khỏi bộ nhớ.",
     }
 }
