@@ -15,11 +15,9 @@ from ollama import Client
 from ui.main_window import MainWindow
 import config
 
-try:
-    # Arbitrary unique string to group taskbar icons
+# Windows-specific feature: Set AppUserModelID to group taskbar icons
+if config.WIN_TASKBAR_PROGRESS_SUPPORT:
     ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(config.APP_ID)
-except ImportError:
-    pass
 
 def load_stylesheet(app):
     # Load Nord theme from style.qss

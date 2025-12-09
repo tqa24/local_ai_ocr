@@ -16,7 +16,10 @@ from ocr_worker import OCRWorker
 from ollama_service import ModelUnloadWorker
 from .control_panel import ControlPanel
 from .output_panel import OutputPanel
-from win_taskbar import TaskbarProgress
+
+# Windows-specific feature
+if config.WIN_TASKBAR_PROGRESS_SUPPORT:
+    from win_taskbar import TaskbarProgress
 
 
 class MainWindow(QMainWindow):
@@ -28,7 +31,8 @@ class MainWindow(QMainWindow):
         self.setWindowTitle(f"Local AI OCR ({config.APP_VERSION})")
         self.resize(1067, 600) # Six-seven... Six-seven... Six-seven...
 
-        self.taskbar = TaskbarProgress() # Windows taskbar progress indicator
+        # Windows taskbar progress indicator
+        self.taskbar = TaskbarProgress() if config.WIN_TASKBAR_PROGRESS_SUPPORT else None
 
         # Set Window Icon
         icon_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "res", "icon.png")
@@ -237,7 +241,9 @@ class MainWindow(QMainWindow):
         self.set_processing_state(True)
         self.batch_start_time = time.time()
 
-        self.taskbar.set_progress(int(self.winId()), 0, len(queue))
+        # Windows-specific taskbar progress indicator
+        if self.taskbar:
+            self.taskbar.set_progress(int(self.winId()), 0, len(queue))
 
         self.worker = OCRWorker(self.client, queue, prompt_template, model_name, prompt_id)
 
@@ -257,7 +263,9 @@ class MainWindow(QMainWindow):
         if self.worker and self.worker.isRunning():
             self.worker.stop()
             self.output_panel.append_text(f"\n\n=== {self.t['msg_stopped']} ===")
-            self.taskbar.stop_progress(int(self.winId()))
+            # Windows taskbar progress indicator
+            if self.taskbar:
+                self.taskbar.stop_progress(int(self.winId()))
 
     # ==================== Processing Callbacks ====================
     @Slot(str, int)
@@ -276,19 +284,22 @@ class MainWindow(QMainWindow):
         else:
             self.output_panel.append_text(f"\n")
 
-        # Update taskbar progress
-        self.taskbar.set_progress(
-            int(self.winId()),
-            self.control_panel.progress_bar.value(),
-            self.control_panel.progress_bar.maximum()
-        )
+        # Update Windows taskbar progress
+        if self.taskbar:
+            self.taskbar.set_progress(
+                int(self.winId()),
+                self.control_panel.progress_bar.value(),
+                self.control_panel.progress_bar.maximum()
+            )
 
     @Slot()
     def on_finished(self):
         # Called when all images have been processed.
         self.set_processing_state(False)
         self.control_panel.update_status()
-        self.taskbar.stop_progress(int(self.winId()))
+        # Windows taskbar progress indicator
+        if self.taskbar:
+            self.taskbar.stop_progress(int(self.winId()))
 
         self.output_panel.render_fancy_output()
 

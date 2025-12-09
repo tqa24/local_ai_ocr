@@ -1,9 +1,13 @@
 # src/config.py
+import sys
 
 APP_VERSION = "v2.0"
-APP_ID = f"th1nhhdk.localaiocr.{APP_VERSION}"
 APP_AUTHOR = "Nguyễn Phước Thịnh"
 PROJECT_URL = "https://github.com/th1nhhdk/local_ai_ocr"
+
+# Windows-specific feature
+WIN_TASKBAR_PROGRESS_SUPPORT = sys.platform == "win32"
+APP_ID = f"th1nhhdk.localaiocr.{APP_VERSION}"
 
 OLLAMA_HOST = "http://127.0.0.1:11435"
 OLLAMA_MODEL = "deepseek-ocr:3b"
