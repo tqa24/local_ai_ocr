@@ -11,13 +11,9 @@ OLLAMA_MODEL = "deepseek-ocr:3b"
 # DeepSeek-OCR expects 1024x1024 inputs
 TARGET_IMAGE_SIZE = (1024, 1024)
 
-# Configuration from vLLM-Inference example
+# Configuration from Ollama Modelfile
 INFERENCE_PARAMS = {
     "temperature": 0,
-    "num_predict": 8192,
-    "num_ctx": 8192,
-    "repeat_last_n": -1, # This is *inf of what VLLM uses (window_size=90).
-    "repeat_penalty": 1.2, # Strongly discourage model infinite looping (only work sometimes).
 }
 
 PROMPTS = {
