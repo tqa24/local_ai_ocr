@@ -183,7 +183,7 @@ taskkill /F /IM ollama.exe >nul 2>&1
 
 echo.
 echo Environment setup complete.
-echo You can now run 'run.bat' or 'run_cpu-only.bat'.
+echo You can now run 'run.cmd' or 'run_cpu-only.cmd'.
 pause
 exit /b 0
 

@@ -38,7 +38,7 @@ An **local**, **offline** (after initial setup), **portable** OCR software that 
 ## Download and Setup
 
 0. Download the `.zip` file from the Releases section (on the right, under About), extract it
-1. Run `env_setup.bat`
+1. Run `env_setup.cmd`
    - **Note:** This script will download the AI weights file, which is 6.67 GB
 
 - You have completed the software setup; the software will no longer need a network connection.
@@ -52,8 +52,8 @@ An **local**, **offline** (after initial setup), **portable** OCR software that 
 ## Usage Guide
 
 1. **Launch the software:**
-   - Run the `run.bat` file to start the software (uses GPU if available).
-   - If you want to force the software to run on CPU, use `run_cpu-only.bat`.
+   - Run the `run.cmd` file to start the software (uses GPU if available).
+   - If you want to force the software to run on CPU, use `run_cpu-only.cmd`.
 
 2. **Using the software:**
    - **2a. File management:**
@@ -70,6 +70,6 @@ An **local**, **offline** (after initial setup), **portable** OCR software that 
 
 ## Troubleshooting
 
-- If you encounter GPU-related errors, use `run_cpu-only.bat` instead of `run.bat` so the software won't use the GPU.
+- If you encounter GPU-related errors, use `run_wlog.cmd` to view error logs, or use `run_cpu-only.cmd` so the software won't use the GPU.
 
 - "`Markdown Document (keep formatting)`" doesn't output anything: try using "`Free OCR`" mode.

@@ -39,7 +39,7 @@ Một phần mềm OCR **nội bộ**, **offline** (sau khi thiết lập lần 
 ## Tải về và thiết lập
 
 0. Tải file `.zip` trong mục Releases (bên phải, dưới About), giải nén nó ra
-1. Chạy `env_setup.bat`
+1. Chạy `env_setup.cmd`
    - **Lưu ý:** Script này sẽ tải về file (weights) AI nặng 6.67 GB
 
 - Bạn đã hoàn thành việc thiết lập phần mềm, phần mềm sẽ không cần kết nối mạng nữa.
@@ -53,8 +53,8 @@ Một phần mềm OCR **nội bộ**, **offline** (sau khi thiết lập lần 
 ## Hướng dẫn sử dụng
 
 1. **Khởi động phần mềm:**
-   - Chạy file `run.bat` để khởi động phần mềm (sử dụng GPU nếu có thể).
-   - Nếu bạn muốn ép phần mềm chạy bằng CPU, hãy dùng `run_cpu-only.bat`.
+   - Chạy file `run.cmd` để khởi động phần mềm (sử dụng GPU nếu có thể).
+   - Nếu bạn muốn ép phần mềm chạy bằng CPU, hãy dùng `run_cpu-only.cmd`.
 
 2. **Sử dụng phần mềm:**
    - **2a. Quản lý tệp tin:**
@@ -71,5 +71,5 @@ Một phần mềm OCR **nội bộ**, **offline** (sau khi thiết lập lần 
 
 ## Xử lý vấn đề
 
-- Nếu bạn gặp lỗi liên quan đến GPU, hãy dùng `run_cpu-only.bat` thay vì `run.bat` để phần mềm không sử dụng GPU.
+- Nếu bạn gặp lỗi liên quan đến GPU, hãy dùng `run_wlog.cmd` để xem log lỗi, hoặc dùng `run_cpu-only.cmd` để phần mềm không sử dụng GPU.
 - Chế độ "`Tài liệu Markdown (giữ định dạng)`" không in ra gì cả: Hãy thử chế độ "`OCR Tự do (Free OCR)`".

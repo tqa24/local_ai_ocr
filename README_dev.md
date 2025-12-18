@@ -246,7 +246,7 @@ graph TD
 ## Environment setup
 
 ### Automated
-- Execute `env_setup.bat`.
+- Execute `env_setup.cmd`.
 
 ### Manual
 1. **Python:**
@@ -273,8 +273,10 @@ graph TD
    ```
 
 ## Running
-- **With GPU (If possible):** `run.bat`
-- **CPU-Only Mode:** `run_cpu-only.bat`
+- **With GPU (If possible):** `run.cmd`
+- **With GPU (+ Logging):** `run_wlog.cmd`
+- **CPU-Only Mode:** `run_cpu-only.cmd`
+- **CPU-Only Mode (+ Logging):** `run_cpu-only_wlog.cmd`
 
 ## Debloating `src/res/node/mathjax` and `src/res/node/@mathjax/mathjax-newcm-font`
 ```
