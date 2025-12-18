@@ -37,9 +37,7 @@ def main():
     if os.path.exists(icon_path):
         app.setWindowIcon(QIcon(icon_path))
 
-    # run.ps1 does set the OLLAMA_HOST variable
-    host = os.environ.get("OLLAMA_HOST", config.OLLAMA_HOST)
-    client = Client(host=host)
+    client = Client(host=config.OLLAMA_HOST)
 
     window = MainWindow(client)
     # We have to use the whole screen...
