@@ -3,6 +3,7 @@
 # Local AI OCR (v2.1.1)
 
 ## Tech Stack
+- **wget2:** `2.2.0`
 - **Python:** Embeddable Python `3.13.11`
 - **Ollama:** `0.13.2`
 - **deepseek-ocr:3b:** `0e7b018b8a22`
