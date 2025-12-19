@@ -19,7 +19,7 @@ if exist "%ARCHIVE_NAME%" (
 echo Creating %ARCHIVE_NAME%...
 
 %ZIP% a -tzip "%ARCHIVE_NAME%" ^
-    "bin\wget.exe" ^
+    "bin\wget2.exe" ^
     "demo\" ^
     "src\" ^
     ".gitignore" ^
@@ -40,11 +40,15 @@ echo Creating %ARCHIVE_NAME%...
     -xr^^!"*.pyo"
 
 if errorlevel 1 (
+    echo.
     echo FATAL: make_release failed
+    echo.
+    pause
     exit /b 1
 )
 
 echo.
 echo DONE: %ARCHIVE_NAME% created successfully
+echo.
 endlocal
 pause
